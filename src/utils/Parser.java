@@ -20,6 +20,7 @@ public class Parser {
 		filepath = fp;
 		configpath = cp;
 	}
+	public Parser(){}
 	public int LoadConfig(){
 		try(BufferedReader br = new BufferedReader(new FileReader(configpath))){
 			String line = br.readLine();
@@ -33,6 +34,10 @@ public class Parser {
 			return -1;
 		}
 		return toParse.size();
+	}
+	public int LoadConfig(String cp){
+		configpath = cp;
+		return LoadConfig();
 	}
 	public int ParseFile(){
 		try(BufferedReader br = new BufferedReader(new FileReader(filepath))){
@@ -64,7 +69,7 @@ public class Parser {
 							hm.put(names.get(i),ds[i+1]);
 						}
 						edt.insert(tag, hm);
-						System.out.println(new String(hm.toString().getBytes("gbk"),"UTF-8"));
+						//System.out.println(new String(hm.toString().getBytes("gbk"),"UTF-8"));
 					}
 				}else{
 					// jump this line
@@ -78,7 +83,14 @@ public class Parser {
 			return -1;
 		}		
 	}
+	public int ParseFile(String fp){
+		filepath = fp;
+		return ParseFile();
+	}
 	public List<String> getToParse(){
 		return toParse;
+	}
+	public Edata getEdata(){
+		return edt;
 	}
 }
