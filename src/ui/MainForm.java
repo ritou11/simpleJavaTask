@@ -1,6 +1,9 @@
 package ui;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
@@ -26,6 +29,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class MainForm {
 
@@ -74,9 +78,10 @@ public class MainForm {
 	 */
 	protected void createContents() {
 		shlEfileparser = new Shell(SWT.SHELL_TRIM & (~SWT.RESIZE));
+		shlEfileparser.setImage(SWTResourceManager.getImage(MainForm.class, "/com/sun/javafx/scene/web/skin/FontBackgroundColor_16x16_JFX.png"));
 		shlEfileparser.setSize(new Point(470, 447));
 		shlEfileparser.setVisible(true);
-		shlEfileparser.setText("efileParser");
+		shlEfileparser.setText("QS File Parser");
 
 		combTags = new Combo(shlEfileparser, SWT.READ_ONLY);
 		combTags.addModifyListener(new ModifyListener() {
@@ -101,8 +106,46 @@ public class MainForm {
 				if (nps < 0)
 					textLog.setText("No file!");
 				else {
-					textLog.setText(String.format("Parsed:%d tag(s).", nps));
+					StringBuilder sb = new StringBuilder();
+					sb.append(String.format("Parsed:%d tag(s), including:\n",
+							nps));
 					Edata edt = pr.getEdata();
+					for (Map.Entry<String, List<Record>> entry : edt.entrySet()) {
+						sb.append("--- ");
+						sb.append(entry.getKey());
+						sb.append(String.format(", with %d records;\n", entry
+								.getValue().size()));
+					}
+					if (!edt.containsKey("Bus")) {
+						sb.append("No tag called \"Bus\"!\n");
+					} else {
+						int n220 = edt.queryAll("Bus", "volt", "220").size();
+						int n500 = edt.queryAll("Bus", "volt", "500").size();
+						sb.append(String
+								.format("Information of Bus:\n--- 220kV: %d\n--- 500kV: %d\n",
+										n220, n500));
+					}
+					if (!edt.containsKey("ACline")) {
+						sb.append("No tag called \"ACline\"!\n");
+					} else {
+						HashSet<Record> hs = new HashSet<Record>();
+						hs.addAll(edt.queryAll("ACline", "I_node", "''"));
+						hs.addAll(edt.queryAll("ACline", "J_node", "''"));
+						sb.append(String
+								.format("Information of ACLine:\n--- Suspended line: %d\n",
+										hs.size()));
+					}
+					if (!edt.containsKey("DCline")) {
+						sb.append("No tag called \"DCline\"!\n");
+					} else {
+						HashSet<Record> hs = new HashSet<Record>();
+						hs.addAll(edt.queryAll("DCline", "I_node", "''"));
+						hs.addAll(edt.queryAll("DCline", "J_node", "''"));
+						sb.append(String
+								.format("Information of DCLine:\n--- Suspended line: %d\n",
+										hs.size()));
+					}
+					textLog.setText(sb.toString());
 					for (String key : edt.keySet()) {
 						combTags.add(key);
 					}
@@ -113,6 +156,7 @@ public class MainForm {
 		btnParse.setText("Parse");
 
 		textPath = new Text(shlEfileparser, SWT.BORDER);
+		textPath.setText("F:\\Users\\ThinkPad\\workspace\\EFileParser\\example.QS");
 		textPath.setBounds(66, 11, 219, 23);
 
 		textLog = new Text(shlEfileparser, SWT.BORDER | SWT.V_SCROLL);
@@ -174,8 +218,13 @@ public class MainForm {
 	}
 
 	private void doQuery() {
-		QueryResult rds = pr.getEdata().queryAll(combTags.getText(),
-				combKeys.getText(), textKeyValue.getText());
+		QueryResult rds;
+		if (textKeyValue.getText().equals(""))
+			rds = pr.getEdata().queryAll(combTags.getText(),
+					combKeys.getText(), null);
+		else
+			rds = pr.getEdata().queryAll(combTags.getText(),
+					combKeys.getText(), textKeyValue.getText());
 		if (rds.size() <= 0)
 			textLog.setText("No record.");
 		else {

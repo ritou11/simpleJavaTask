@@ -10,12 +10,13 @@ public class Edata extends HashMap<String, List<Record>> {
 
 	public void put_cn(String tag, String eng, String cn) {
 		HashMap<String, String> hm = eng2cn.get(tag);
-		if(hm != null) hm.put(eng, cn);
-		else{
+		if (hm != null)
+			hm.put(eng, cn);
+		else {
 			hm = new HashMap<String, String>();
 			hm.put(eng, cn);
 			eng2cn.put(tag, hm);
-		}		
+		}
 	}
 
 	public HashMap<String, String> get_eng2cn(String tag) {
@@ -47,12 +48,16 @@ public class Edata extends HashMap<String, List<Record>> {
 		}
 		return null;
 	}
-	
+
 	public QueryResult queryAll(String TagName, String KeyName, String value) {
 		QueryResult rds = new QueryResult();
 		List<Record> lhm = this.get(TagName);
 		if (lhm == null)
 			return rds;
+		if(value == null) {
+			rds.addAll(lhm);
+			return rds;
+		}
 		for (int i = 0; i < lhm.size(); i++) {
 			Record hm = lhm.get(i);
 			String sid = hm.get(KeyName);
